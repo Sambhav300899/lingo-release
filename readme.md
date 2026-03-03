@@ -24,9 +24,7 @@ Motion is divided into segments requiring start and end goal markers.
 1. **Preprocessing:** Run `scannet2lingo_occ.ipynb` to align the scene and generate the occupancy grid (`dataset/Scene_vis/demo-scannet.npy`) and `bottom_half.ply`.
 2. **Execution:** Load `bottom_half.ply` in Blender and follow the training scene steps above.
 
-<center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Nm6fIQejy3I" title="ScanNet Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-</center>
+[![ScanNet Demo](https://img.youtube.com/vi/Nm6fIQejy3I/0.jpg)](https://www.youtube.com/watch?v=Nm6fIQejy3I)
 
 # Autonomous Character-Scene Interaction Synthesis from Text Instruction
 
