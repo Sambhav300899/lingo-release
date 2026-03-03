@@ -1,27 +1,32 @@
 # Custom Fork Instructions
-This fork was made to run LINGO on a custom dataset like ScanNet. 
 
-- Follow the instructions in the original README to install the dependencies and download the dataset. Please also make sure to install the correct version of blender and the SMPL add on.
-- Make sure you can run the visualisation for 'vis.blend' dataset. Make sure to run blender in the root of the repository to ensure paths work correctly.
-- The structure for running LINGO -
-    - The motion is divided into segments which require start and end goal markers.
-    - To generate motion you can add input text, start and end goal markers in the `get_input` script within blender. After that run this script
-    - By default this saves the input dictionary for 'demo-21' script within `results/inputs/demo-21.pkl`
-    - After doing this, run `python sample_lingo.py` to generate motion. This saves the generated motiont to `results/motions/demo-21.pkl`. Run the `vis_output` script in blender to load the animations
+This fork was made to run LINGO on a custom dataset like ScanNet.
 
-```markdown
-- **[NOTE: For custom datasets, look below, this is only for scenes from their dataset]** To run on other samples from the training set, use the following instructions & video as reference -
-```
-    - Load the `vis.blend` scene into blender
-    - Select the mesh you want to use from `Scene_mesh` folder and add the .obj file for it to blender. 
-    - The mesh will cointain the scan for the whole room, we need to pre-process it so that we can give goal markers correctly. Please note that LINGO doesn't directly use .obj files, rather needs a voxel grid, so any modifications we make here are only for visually providing goal markers correctly. The voxel grids are pre-defined for the training scenes, so you don't need to do this for them.
-    - Copy the voxel grid from `dataset/Scene` to `dataset/Scene_vis` and rename for the selected scene. e.g - copy `dataset/Scene/060.npy` to `dataset/Scene_vis/demo-060.npy`
-    - The LINGO scans are for the whole room. So we can slice them in half for easier visualisation, look at the video on how to do so.
-    - Place goal markers in this environment and add segments. Remember to also change the file name in the `vis_output` script.
-    - Run the sampling script with the extra argumnet `python sample_lingo.py test_setting=demo-[scene name]`. E.g - For 060 `python sample_lingo.py test_setting=demo-060` 
-    
+### Setup and Prerequisites
+- Follow the instructions in the original README to install dependencies and download the dataset.
+- Ensure the correct version of Blender and the SMPL add-on are installed.
+- Run Blender from the repository root to ensure paths for `vis.blend` work correctly.
 
+### General Workflow
+Motion is divided into segments requiring start and end goal markers.
+1. **Input Generation:** Use the `get_input` script in Blender to add text and markers. This saves the input dictionary to `results/inputs/demo-21.pkl`.
+2. **Sampling:** Run `python sample_lingo.py` to generate motion, saved to `results/motions/demo-21.pkl`.
+3. **Visualization:** Run the `vis_output` script in Blender to load animations.
 
+### Running on LINGO Training Scenes
+1. Load `vis.blend` and import the corresponding `.obj` from the `Scene_mesh` folder.
+2. Copy the voxel grid from `dataset/Scene/<ID>.npy` to `dataset/Scene_vis/demo-<ID>.npy`.
+3. Slice the room mesh in half for easier visualization and marker placement. [See video for how to slice the mesh in blender]
+4. Place goal markers and update the filename in the `vis_output` script.
+5. Run: `python sample_lingo.py test_setting=demo-<ID>`.
+
+### Running on Custom Datasets (ScanNet)
+1. **Preprocessing:** Run `scannet2lingo_occ.ipynb` to align the scene and generate the occupancy grid (`dataset/Scene_vis/demo-scannet.npy`) and `bottom_half.ply`.
+2. **Execution:** Load `bottom_half.ply` in Blender and follow the training scene steps above.
+
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Nm6fIQejy3I" title="ScanNet Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</center>
 
 # Autonomous Character-Scene Interaction Synthesis from Text Instruction
 
