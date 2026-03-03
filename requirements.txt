@@ -35,9 +35,9 @@ six==1.17.0
 smplx==0.1.28
 tensorboard==2.14.0
 tensorboard-data-server==0.7.2
-torch==1.13.1+cu117
-torchaudio==0.13.1+cu117
-torchvision==0.14.1+cu117
+#torch==1.13.1+cu117
+#torchaudio==0.13.1+cu117
+#torchvision==0.14.1+cu117
 tqdm==4.67.1
 typing_extensions==4.12.2
 urllib3==2.2.3

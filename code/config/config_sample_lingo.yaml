@@ -27,9 +27,9 @@ repeat_time: 0
 seg_num: 1
 seg_len: 4 # episode
 
-speed: 0.8
+speed: 1.5
 
-test_setting: demo-21
+test_setting: demo-scannet
 exp_dir: ${oc.env:ROOT_DIR}/results/outputs
 ckpt_path: ${oc.env:ROOT_DIR}/ckpts/model/bs128__ws16__scene_occ_two.pth
 input_path: ${oc.env:ROOT_DIR}/results/inputs/${test_setting}.pkl
@@ -39,7 +39,7 @@ scene_type: occ_two
 
 max_window_size: 16
 
-motion_len: 10000000
+motion_len: 20000000
 
 load_language: true
 load_scene: true

@@ -4,15 +4,29 @@ from pathfinding.finder.a_star import AStarFinder
 import numpy as np
 import cv2
 
+
 def get_path(start, end, synhsi_dataset):
-    voxel_size = np.divide(synhsi_dataset.scene_grid_np[3: 6] - synhsi_dataset.scene_grid_np[:3],
-                           synhsi_dataset.scene_grid_np[6:])[[0, 2]]
-    grid_start = np.divide((start - synhsi_dataset.scene_grid_np[[0, 2]]), voxel_size).astype(int)
-    grid_end = np.divide((end - synhsi_dataset.scene_grid_np[[0, 2]]), voxel_size).astype(int)
+    voxel_size = np.divide(
+        synhsi_dataset.scene_grid_np[3:6] - synhsi_dataset.scene_grid_np[:3],
+        synhsi_dataset.scene_grid_np[6:],
+    )[[0, 2]]
+    grid_start = np.divide(
+        (start - synhsi_dataset.scene_grid_np[[0, 2]]), voxel_size
+    ).astype(int)
+    grid_end = np.divide(
+        (end - synhsi_dataset.scene_grid_np[[0, 2]]), voxel_size
+    ).astype(int)
 
     occ = synhsi_dataset.scene_occ[0].detach().cpu().numpy()
 
-    occ_grid = np.sum(occ[:, 10: 40, :], axis=1) # 400x600
+    occ_grid = np.sum(occ[:, 10:40, :], axis=1)  # 400x600
+
+    # Clip grid start and end bounds
+    grid_start[0] = np.clip(grid_start[0], 0, occ_grid.shape[0] - 1)
+    grid_start[1] = np.clip(grid_start[1], 0, occ_grid.shape[1] - 1)
+    grid_end[0] = np.clip(grid_end[0], 0, occ_grid.shape[0] - 1)
+    grid_end[1] = np.clip(grid_end[1], 0, occ_grid.shape[1] - 1)
+
     occ_grid = (occ_grid - occ_grid.min()) / (occ_grid.max() - occ_grid.min()) * 255
 
     occ_grid = cv2.dilate(occ_grid, np.ones((15, 15), np.uint8), iterations=1)
@@ -21,7 +35,7 @@ def get_path(start, end, synhsi_dataset):
     occ_grid[occ_grid > 1] = 255
 
     img = (occ_grid - occ_grid.min()) / (occ_grid.max() - occ_grid.min()) * 255
-    cv2.imwrite('gray0.jpg', img.T)
+    cv2.imwrite("gray0.jpg", img.T)
 
     occ_grid_astar = Grid(matrix=occ_grid.T)
 
@@ -41,6 +55,6 @@ def get_path(start, end, synhsi_dataset):
     for i in range(len(path)):
         img_new[int(path[i, 0]), int(path[i, 1]), 1] = 255
 
-    cv2.imwrite(f'gray1.jpg', img_new.transpose(1, 0, 2))
+    cv2.imwrite(f"gray1.jpg", img_new.transpose(1, 0, 2))
 
     return midpoints

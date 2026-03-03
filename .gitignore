@@ -1,4 +1,14 @@
 __pycache__/
 .idea/
 *.pyc
-.blend1
+*.blend1
+*.blend
+dataset
+ckpts
+scannet
+results
+Scene_mesh
+smpl_models
+lingo_utils.zip
+Scene_mesh.zip
+download-scannet.py

@@ -3,8 +3,61 @@ import numpy as np
 from mathutils import Vector, Quaternion
 
 SMPLX_JOINT_NAMES = [
-    'pelvis','left_hip','right_hip','spine1','left_knee','right_knee','spine2','left_ankle','right_ankle','spine3', 'left_foot','right_foot','neck','left_collar','right_collar','head','left_shoulder','right_shoulder','left_elbow', 'right_elbow','left_wrist','right_wrist',
-    'jaw','left_eye_smplhf','right_eye_smplhf','left_index1','left_index2','left_index3','left_middle1','left_middle2','left_middle3','left_pinky1','left_pinky2','left_pinky3','left_ring1','left_ring2','left_ring3','left_thumb1','left_thumb2','left_thumb3','right_index1','right_index2','right_index3','right_middle1','right_middle2','right_middle3','right_pinky1','right_pinky2','right_pinky3','right_ring1','right_ring2','right_ring3','right_thumb1','right_thumb2','right_thumb3'
+    "pelvis",
+    "left_hip",
+    "right_hip",
+    "spine1",
+    "left_knee",
+    "right_knee",
+    "spine2",
+    "left_ankle",
+    "right_ankle",
+    "spine3",
+    "left_foot",
+    "right_foot",
+    "neck",
+    "left_collar",
+    "right_collar",
+    "head",
+    "left_shoulder",
+    "right_shoulder",
+    "left_elbow",
+    "right_elbow",
+    "left_wrist",
+    "right_wrist",
+    "jaw",
+    "left_eye_smplhf",
+    "right_eye_smplhf",
+    "left_index1",
+    "left_index2",
+    "left_index3",
+    "left_middle1",
+    "left_middle2",
+    "left_middle3",
+    "left_pinky1",
+    "left_pinky2",
+    "left_pinky3",
+    "left_ring1",
+    "left_ring2",
+    "left_ring3",
+    "left_thumb1",
+    "left_thumb2",
+    "left_thumb3",
+    "right_index1",
+    "right_index2",
+    "right_index3",
+    "right_middle1",
+    "right_middle2",
+    "right_middle3",
+    "right_pinky1",
+    "right_pinky2",
+    "right_pinky3",
+    "right_ring1",
+    "right_ring2",
+    "right_ring3",
+    "right_thumb1",
+    "right_thumb2",
+    "right_thumb3",
 ]
 NUM_SMPLX_JOINTS = len(SMPLX_JOINT_NAMES)
 NUM_SMPLX_BODYJOINTS = 21
@@ -21,12 +74,16 @@ def load_smplx_animation(file, obj):
     animation_data_clear(obj)
 
     armature = obj.parent
-    bpy.context.view_layer.objects.active = obj  # mesh needs to be active object for recalculating joint locations
+    bpy.context.view_layer.objects.active = (
+        obj  # mesh needs to be active object for recalculating joint locations
+    )
 
     with np.load("./smplx_handposes.npz", allow_pickle=True) as data:
         hand_poses = data["hand_poses"].item()
         (left_hand_pose, right_hand_pose) = hand_poses["relaxed"]
-        hand_pose_relaxed = np.concatenate((left_hand_pose, right_hand_pose)).reshape(NUM_SMPLX_HANDJOINTS * 2, 3)
+        hand_pose_relaxed = np.concatenate((left_hand_pose, right_hand_pose)).reshape(
+            NUM_SMPLX_HANDJOINTS * 2, 3
+        )
 
     translation = file["transl"].reshape(-1, 3)
     global_orient = file["global_orient"].reshape(-1, 3)
@@ -36,7 +93,7 @@ def load_smplx_animation(file, obj):
     betas = [0.0] * 10
     num_keyframes = len(body_pose)
 
-    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode="OBJECT")
     for index, beta in enumerate(betas):
         key_block_name = f"Shape{index:03}"
 
@@ -45,44 +102,87 @@ def load_smplx_animation(file, obj):
         else:
             print(f"ERROR: No key block for: {key_block_name}")
 
-    bpy.ops.object.smplx_update_joint_locations('EXEC_DEFAULT')
+    if "smplx_version" not in obj:
+        obj["smplx_version"] = "v1.1"
+    if "smplx_gender" not in obj:
+        obj["smplx_gender"] = "neutral"
 
-    global_orients = np.array([get_quat_from_rodrigues(rodrigues) for rodrigues in global_orient])
-    body_poses = {bone_name: np.array([get_quat_from_rodrigues(rodrigues) for rodrigues in body_pose[:, index, :]])
-                  for index, bone_name in enumerate(SMPLX_JOINT_NAMES[1: NUM_SMPLX_BODYJOINTS + 1])}
+    bpy.ops.object.smplx_update_joint_locations("EXEC_DEFAULT")
+
+    global_orients = np.array(
+        [get_quat_from_rodrigues(rodrigues) for rodrigues in global_orient]
+    )
+    body_poses = {
+        bone_name: np.array(
+            [get_quat_from_rodrigues(rodrigues) for rodrigues in body_pose[:, index, :]]
+        )
+        for index, bone_name in enumerate(
+            SMPLX_JOINT_NAMES[1 : NUM_SMPLX_BODYJOINTS + 1]
+        )
+    }
 
     start_name_index = 1 + NUM_SMPLX_BODYJOINTS + 3
-    left_hand_poses = {bone_name: np.array([get_quat_from_rodrigues(rodrigues, hand_pose_relaxed[i]) for rodrigues in left_hand_pose[:, i, :]])
-                       for i, bone_name in enumerate(SMPLX_JOINT_NAMES[start_name_index: start_name_index + NUM_SMPLX_HANDJOINTS])}
+    left_hand_poses = {
+        bone_name: np.array(
+            [
+                get_quat_from_rodrigues(rodrigues, hand_pose_relaxed[i])
+                for rodrigues in left_hand_pose[:, i, :]
+            ]
+        )
+        for i, bone_name in enumerate(
+            SMPLX_JOINT_NAMES[
+                start_name_index : start_name_index + NUM_SMPLX_HANDJOINTS
+            ]
+        )
+    }
 
     start_name_index = 1 + NUM_SMPLX_BODYJOINTS + 3 + NUM_SMPLX_HANDJOINTS
-    right_hand_poses = {bone_name: np.array([get_quat_from_rodrigues(rodrigues, hand_pose_relaxed[NUM_SMPLX_HANDJOINTS + i]) for rodrigues in right_hand_pose[:, i, :]])
-                        for i, bone_name in enumerate(SMPLX_JOINT_NAMES[start_name_index: start_name_index + NUM_SMPLX_HANDJOINTS])}
+    right_hand_poses = {
+        bone_name: np.array(
+            [
+                get_quat_from_rodrigues(
+                    rodrigues, hand_pose_relaxed[NUM_SMPLX_HANDJOINTS + i]
+                )
+                for rodrigues in right_hand_pose[:, i, :]
+            ]
+        )
+        for i, bone_name in enumerate(
+            SMPLX_JOINT_NAMES[
+                start_name_index : start_name_index + NUM_SMPLX_HANDJOINTS
+            ]
+        )
+    }
 
     body_poses = {**body_poses, **left_hand_poses, **right_hand_poses}
-    body_poses['pelvis'] = global_orients
+    body_poses["pelvis"] = global_orients
 
     animation_data = armature.animation_data_create()
-    action = animation_data.action = bpy.data.actions.new(f'{armature.name}Action')
+    action = animation_data.action = bpy.data.actions.new(f"{armature.name}Action")
     for i in range(3):
         fcurve = action.fcurves.new('pose.bones["root"].location', index=i)
         fcurve.keyframe_points.add(count=num_keyframes)
-        fcurve.keyframe_points.foreach_set("co", [x for co in zip(range(num_keyframes), translation[:, i]) for x in co])
+        fcurve.keyframe_points.foreach_set(
+            "co", [x for co in zip(range(num_keyframes), translation[:, i]) for x in co]
+        )
         fcurve.update()
     for bone_name, quaternions in body_poses.items():
         for i in range(4):
-            fcurve = action.fcurves.new(f'pose.bones["{bone_name}"].rotation_quaternion', index=i)
+            fcurve = action.fcurves.new(
+                f'pose.bones["{bone_name}"].rotation_quaternion', index=i
+            )
             fcurve.keyframe_points.add(count=num_keyframes)
-            fcurve.keyframe_points.foreach_set("co",
-                                               [x for co in zip(range(num_keyframes), quaternions[:, i]) for x in co])
+            fcurve.keyframe_points.foreach_set(
+                "co",
+                [x for co in zip(range(num_keyframes), quaternions[:, i]) for x in co],
+            )
             fcurve.update()
 
     bpy.context.scene.frame_set(0)
 
     # Activate corrective poseshapes
-    bpy.ops.object.smplx_set_poseshapes('EXEC_DEFAULT')
+    bpy.ops.object.smplx_set_poseshapes("EXEC_DEFAULT")
 
-    return {'FINISHED'}
+    return {"FINISHED"}
 
 
 def get_quat_from_rodrigues(rodrigues, rodrigues_reference=None):
@@ -93,9 +193,11 @@ def get_quat_from_rodrigues(rodrigues, rodrigues_reference=None):
     quat = Quaternion(axis, angle_rad)
 
     if rodrigues_reference is None:
-       return quat
+        return quat
     else:
-        rod_reference = Vector((rodrigues_reference[0], rodrigues_reference[1], rodrigues_reference[2]))
+        rod_reference = Vector(
+            (rodrigues_reference[0], rodrigues_reference[1], rodrigues_reference[2])
+        )
         rod_result = rod + rod_reference
         angle_rad_result = rod_result.length
         axis_result = rod_result.normalized()
@@ -108,8 +210,8 @@ def set_pose_from_rodrigues(armature, bone_name, rodrigues, rodrigues_reference=
     angle_rad = rod.length
     axis = rod.normalized()
 
-    if armature.pose.bones[bone_name].rotation_mode != 'QUATERNION':
-        armature.pose.bones[bone_name].rotation_mode = 'QUATERNION'
+    if armature.pose.bones[bone_name].rotation_mode != "QUATERNION":
+        armature.pose.bones[bone_name].rotation_mode = "QUATERNION"
 
     quat = Quaternion(axis, angle_rad)
 
@@ -120,7 +222,9 @@ def set_pose_from_rodrigues(armature, bone_name, rodrigues, rodrigues_reference=
         # This means that pose values for relaxed hand model cannot be interpreted as rotations in the local joint coordinate system of the relaxed hand.
         # https://github.com/vchoutas/smplx/blob/f4206853a4746139f61bdcf58571f2cea0cbebad/smplx/body_models.py#L1190
         #   full_pose += self.pose_mean
-        rod_reference = Vector((rodrigues_reference[0], rodrigues_reference[1], rodrigues_reference[2]))
+        rod_reference = Vector(
+            (rodrigues_reference[0], rodrigues_reference[1], rodrigues_reference[2])
+        )
         rod_result = rod + rod_reference
         angle_rad_result = rod_result.length
         axis_result = rod_result.normalized()
